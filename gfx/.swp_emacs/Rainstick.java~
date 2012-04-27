@@ -1,0 +1,43 @@
+package gfx;
+
+import processing.core.*;
+import processing.opengl.*;
+import traer.physics.*;
+
+public class Rainstick extends PApplet {
+
+    // public static final int WIDTH = 1920;
+    // public static final int HEIGHT = 1080;
+    public static final int WIDTH = 1280;
+    public static final int HEIGHT = 800;
+
+    public static final int BOX_SIZE = 200;
+    public static int BOX_OFFSET = 200;
+
+    RainstickObject rain;
+
+    public void setup() {
+	size( WIDTH, HEIGHT, OPENGL );
+
+	rain = new RainstickObject( this );
+    }
+
+    public void draw() {
+	background( 255 );
+
+	// Set box properties
+	lights();
+	pushMatrix();
+	translate( WIDTH/2, HEIGHT/2, 200 );
+	rotateY( 0.5f );
+	pushMatrix();
+	rotateZ( (float)((float)(mouseX - WIDTH/2)/(WIDTH/2) *
+			 (Math.PI / 2) ));
+
+	rain.render();
+
+	popMatrix();
+	popMatrix();
+    }
+
+}

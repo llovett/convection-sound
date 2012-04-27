@@ -1,0 +1,48 @@
+package display;
+
+import display.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class RainstickFrame extends Frame {
+
+    Rainstick rainstick;
+
+    public RainstickFrame() {
+	constructWindow();
+    }
+    
+    private void constructWindow() {
+	addWindowListener(new WindowAdapter() {
+		public void windowClosing(WindowEvent e) {
+		    System.exit(0);
+		}
+	    });
+
+	setLayout( new BorderLayout() );
+	setTitle( "Rainstick" );
+
+	rainstick = new Rainstick();
+	rainstick.init();
+
+	setResizable(false);
+	setMinimumSize(new Dimension(rainstick.getWidth(),
+				     rainstick.getHeight()));
+	setPreferredSize(new Dimension(rainstick.getWidth(),
+				       rainstick.getHeight()));
+
+	add(rainstick, BorderLayout.CENTER);
+
+	rainstick.addMouseListener( this );
+    }
+
+    public static void main(String[] args) {
+	java.awt.EventQueue.invokeLater(new Runnable() {
+		public void run() {
+		    RainstickFrame frame = new RainstickFrame();
+		    frame.setVisible(true);
+		}
+	    });
+    }
+    
+}

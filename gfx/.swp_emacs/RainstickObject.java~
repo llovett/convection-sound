@@ -11,69 +11,68 @@ public class RainstickObject {
     ArrayList<Particle> grains;
     ParticleSystem ps;
 
-    public RainstickObject( PApplet parent ) {
-	this.parent = parent;
+    private int length;
+    private int width = 200;
 
-	ps = new ParticleSystem();
-	ps.setIntegrator( ParticleSystem.MODIFIED_EULER );
-	ps.setGravity( 0.0f );
+    public RainstickObject( PApplet parent, ParticleSystem ps ) {
+	this.parent = parent;
+	this.ps = ps;
 
 	grains = new ArrayList<Particle>();
 	// insert 20 grains
 	for ( int i=0; i<20; i++ ) {
 	    grains.add( ps.makeParticle(10.0f,
-					Rainstick.WIDTH/2  + (int)(Math.random()*Rainstick.BOX_SIZE -
-								   Rainstick.BOX_SIZE/2),
-					Rainstick.HEIGHT/2 + (int)(Math.random()*Rainstick.BOX_SIZE -
-								   Rainstick.BOX_SIZE/2),
-					Rainstick.BOX_OFFSET ) );
+					(int)(Math.random()*width) - width/2,
+					(int)(Math.random()*length) - length/2,
+					0) );
 	}
 
+	// Default length
+	length = 400;
 	    
     }
     
     private void checkBounds() {
 	for ( Particle grain : grains ) {
-	    if ( grain.position().x() > Rainstick.WIDTH/2 + Rainstick.BOX_SIZE/2 )
+	    if ( grain.position().x() > width/2 )
 		grain.velocity().set( -grain.velocity().x(),
 				      grain.velocity().y(),
-				      grain.velocity().z() );
-	    if ( grain.position().x() < Rainstick.WIDTH/2 - Rainstick.BOX_SIZE/2 )
+				      0 );
+	    if ( grain.position().x() < -width/2 )
 		grain.velocity().set( -grain.velocity().x(),
 				      grain.velocity().y(),
-				      grain.velocity().z() );
-	    if ( grain.position().y() < Rainstick.WIDTH/2 + Rainstick.BOX_SIZE/2 )
+				      0 );
+	    if ( grain.position().y() > length/2 )
 		grain.velocity().set( grain.velocity().x(),
 				      -grain.velocity().y(),
-				      grain.velocity().z() );
-	    if ( grain.position().y() < Rainstick.WIDTH/2 - Rainstick.BOX_SIZE/2 )
+				      0 );
+	    if ( grain.position().y() < -length/2 )
 		grain.velocity().set( grain.velocity().x(),
 				      -grain.velocity().y(),
-				      grain.velocity().z() );
+				      0 );
 	}
     }
 
     public void render() {
 	checkBounds();
-	
-	parent.strokeWeight( 1 );
-	parent.stroke( 200, 200, 200 );
-	parent.fill( 220, 220, 255, 100 );
-	parent.box( Rainstick.BOX_SIZE );
 
 	parent.strokeWeight( 0 );
 	parent.fill( 180, 0, 30, 255 );
-
+	
 	for ( Particle grain : grains ) {
 	    parent.pushMatrix();
 	    parent.translate( grain.position().x(),
-			      grain.position().y(),
-			      grain.position().z() );
+			      grain.position().y() );
 
-	    
-	    parent.box( 10 );
+	    parent.ellipse( 0, 0, 10, 10 );
 	    parent.popMatrix();
 	}
+
+	parent.strokeWeight( 1 );
+	parent.stroke( 200, 200, 200 );
+	parent.fill( 220, 220, 255, 100 );
+	parent.rectMode( parent.CENTER );
+	parent.rect( 0, 0, width, length );
 
     }
 

@@ -1,7 +1,7 @@
 ############################################################
 # Makefile
 # 
-# Compiles all the files necessary for "tangled orbits".
+# Compiles all the files necessary for your Java project.
 # Each component of the compiler is separated out into
 # its own package, which has its own Makefile, called here.
 # 
@@ -26,10 +26,13 @@ PACKAGES = \
 ###########################
 # GET READY FOR BUILDING! #
 ###########################
-export CS_ROOT:= $(CURDIR)
+export PROJECT_ROOT:= $(CURDIR)
 
 # This GL_DIR value is valid for MacOS X.
-CLASSPATH	= $(TO_ROOT):$(TO_ROOT)/core.jar:$(TO_ROOT)/traer:$(TO_ROOT)/oscP5.jar
+GL_DIR		= $(PROJECT_ROOT)/macgl:$(PROJECT_ROOT)/opengl/gluegen-rt.jar:$(PROJECT_ROOT)/opengl/jogl.jar:$(PROJECT_ROOT)/opengl/opengl.jar:$(PROJECT_ROOT)/processing/opengl/javax:$(PROJECT_ROOT)/processing/opengl:$(PROJECT_ROOT)/processing/opengl/com
+
+CLASSPATH	= $(PROJECT_ROOT):$(PROJECT_ROOT)/core.jar:$(PROJECT_ROOT)/oscP5.jar:$(PROJECT_ROOT)/traer:$(GL_DIR)
+
 
 ifdef PACKAGE
 PACKAGE_LIST 	= $(subst .,,$(PACKAGE))
@@ -38,8 +41,8 @@ PACKAGE_LIST 	= $(subst .,./,$(PACKAGES))
 endif	       
 PACKAGE_LOC  	= $(subst .,./,$(PACKAGE))
 PACKAGE_DIR  	= $(PACKAGE_LOC)
-PLIST_BUILD  	= $(patsubst %,$(TO_ROOT)/%/.build,$(PACKAGE_LIST))
-PLIST_CLEAN  	= $(patsubst %,$(TO_ROOT)/%/.clean,$(PACKAGE_LIST))
+PLIST_BUILD  	= $(patsubst %,$(PROJECT_ROOT)/%/.build,$(PACKAGE_LIST))
+PLIST_CLEAN  	= $(patsubst %,$(PROJECT_ROOT)/%/.clean,$(PACKAGE_LIST))
 JAVA_FILES      = $(filter  %.java,$(SOURCE))
 CLASS_FILES     = $(JAVA_FILES:%.java=$(PACKAGE_DIR)/%.class)
 
@@ -89,7 +92,7 @@ compile: $(CLASS_FILES)
 ### RULE 7
 # Runs the main program
 run:
-#	@java -cp $(CLASSPATH) -Djava.library.path=$(GL_DIR) 
+	@java -cp $(CLASSPATH) -Djava.library.path=$(GL_DIR) gfx.RainstickFrame
 
 ### RULE 8
 # Exuberant tags.

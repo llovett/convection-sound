@@ -19,6 +19,7 @@ public class Rainstick extends PApplet {
     public String address = "127.0.0.1";
 
     RainstickObject rain;
+    int roll, pitch;	// these control the position of the Rainstick.
 
     public void setup() {
 	size( WIDTH, HEIGHT, OPENGL );
@@ -37,10 +38,31 @@ public class Rainstick extends PApplet {
      * */
     public void oscEvent( OscMessage msg ) {
 	// Receive request to add new grain --> call createGrain() on RainstickObject
+	if ( msg.checkAddrPattern("/numgrains") ) {
+	    int grains = (Integer)msg.arguments()[0];
+	    while ( grains > rain.numGrains() )
+		rain.createGrain();
+	}
 
-	
+	// Receive position info --> re-orient the rainstick object
+	if ( msg.checkAddrPattern("/position") ) {
+	    roll = (int)map( (Integer)msg.arguments()[0], 0, 255, 0, WIDTH );
+	    pitch = (int)map( (Integer)msg.arguments()[1], 0, 255, 0, HEIGHT );
+	}
     }
 
+    /**
+     * sendGrain( int grainNo )
+     *
+     * Tell Max to play the specified grain number.
+     *
+     * @param grainNo The grain number to be played.
+     * */
+    public void sendGrain( int grainNo ) {
+	OscMessage msg = new OscMessage( "/playgrain", new Object[]{ grainNo } );
+	osc.send( msg, new NetAddress(address, OSC_PORT_SEND) );
+    }
+    
     public void mouseClicked() {
 	rain.createGrain();
     }
@@ -53,7 +75,10 @@ public class Rainstick extends PApplet {
     public void draw() {
 	background( 255 );
 
-	rain.render( mouseX, mouseY );
+	rain.render( roll, pitch );
+
+	// Uncomment the following line to test with the mouse
+	// rain.render( mouseX, mouseY );
     }
 
 }

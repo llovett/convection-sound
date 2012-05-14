@@ -3,12 +3,13 @@ package gfx;
 import processing.core.*;
 import traer.physics.*;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class RainstickObject {
 
     PApplet parent;
 
-    ArrayList<Particle> particles;
+    CopyOnWriteArrayList<Particle> particles;
     ParticleSystem ps;
 
     // Rainstick properties
@@ -32,7 +33,7 @@ public class RainstickObject {
 	ps = new ParticleSystem( gravity, drag );
 	ps.setIntegrator( ParticleSystem.MODIFIED_EULER );
 	    
-	particles = new ArrayList<Particle>();
+	particles = new CopyOnWriteArrayList<Particle>();
 
 	// For debugging purposes: create some grains already.
 	// for ( int i=0; i<50; i++ )
@@ -60,6 +61,15 @@ public class RainstickObject {
 	    Particle p = particles.get(i);
 	    ps.makeAttraction( p, newPart, -10.0f, partSize/2 );
 	}
+    }
+
+    /**
+     * numGrains()
+     *
+     * @return The number of grains in the Rainstick.
+     * */
+    public int numGrains() {
+	return particles.size();
     }
 
     private void setRotation( float xr, float yr ) {

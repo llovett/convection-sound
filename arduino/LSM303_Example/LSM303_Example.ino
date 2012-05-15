@@ -47,8 +47,9 @@
 
 #define SCALE 2  // accel full-scale, should be 2, 4, or 8
 
-/* Analog pin definitions */
+/* pin definitions (non-magnetometer) */
 #define SOFTPOT 1
+#define LED 13
 
 /* LSM303 Address definitions */
 #define LSM303_MAG  0x1E  // assuming SA0 grounded
@@ -95,7 +96,7 @@
 int accel[3];  // we'll store the raw acceleration values here
 int mag[3];  // raw magnetometer values stored here
 float realAccel[3];  // calculated acceleration values here
-int softpot_value;
+int led_counter;  // Used to keep the LED on for a specified number of cycles without doing a `delay'
 
 void setup()
 {
@@ -104,32 +105,42 @@ void setup()
   initLSM303(SCALE);  // Initialize the LSM303, using a SCALE full-scale range
   
   pinMode( SOFTPOT, INPUT );
+  pinMode( LED, OUTPUT );
 }
 
 void loop()
 {
+  // Grab serial input if it's there
+  if ( Serial.available() ) {
+    // Max sends us a '1' when a grain reset has been completed. That's the only message
+    // No need to look at serial information.
+    digitalWrite( LED, HIGH );
+    led_counter = 10000;  // Keep LED at HIGH for 10000 loops.
+  }
+  
+  // Turn off the LED after counter reaches 0.
+  if ( led_counter > 0 ) {
+    led_counter--;
+  } else {
+    digitalWrite( LED, LOW );
+  }
+  
   getLSM303_accel(accel);  // get the acceleration values and store them in the accel array
   while(!(LSM303_read(SR_REG_M) & 0x01))
     ;  // wait for the magnetometer readings to be ready
-  getLSM303_mag(mag);  // get the magnetometer values, store them in mag
-  //printValues(mag, accel);  // print the raw accel and mag values, good debugging
   
   for (int i=0; i<3; i++)
     realAccel[i] = accel[i] / pow(2, 15) * SCALE;  // calculate real acceleration values, in units of g
   
+  // Send roll and pitch information read from the magnetometer to MaxMSP
   print_roll_and_pitch( realAccel );
+  // Send values from the softpot to MaxMSP
   print_softpot_val();
+  // Send newline, to signify end of one round of signaling
   Serial.println();
-//  Serial.print( analogRead( SOFTPOT ) >> 2 ); // 1 byte only!
-//  Serial.println();
   
-//  
-//  /* print both the level, and tilt-compensated headings below to compare */
-//  Serial.print(getHeading(mag), 3);  // this only works if the sensor is level
-//  Serial.print("\t\t");  // print some tabs
-//  Serial.println(getTiltHeading(mag, realAccel), 3);  // see how awesome tilt compensation is?!
+  // Wait for transmission to finish before attempting more serial communication
   Serial.flush();
-//  delay(100);  // delay for serial readability
 }
 
 void print_roll_and_pitch( float * accelValue ) {
@@ -141,18 +152,21 @@ void print_roll_and_pitch( float * accelValue ) {
   // These scaling values were obtained through observation
   pitch = (pitch + 1.5) * 85;
   roll = (roll + 1.5) * 85;
+  // Using ints here---easier to deal with than floats
   Serial.write( (int)pitch );
-  //Serial.print("\t"); // don't print this in final result
   Serial.write( (int)roll );
-  //Serial.println();
 }
 
 void print_softpot_val() {
-  // We only want one-byte values
-  softpot_value = analogRead( SOFTPOT ) >> 2;
+  // We only want one-byte values (for ease of communication)
+  int softpot_value = analogRead( SOFTPOT ) >> 2;
+  // Sending binary value to avoid silly ascii conversions
   Serial.write( softpot_value );
 }
 
+/*
+ * Initialize the LSM303 to get ready for communication over I2P.
+ */
 void initLSM303(int fs)
 {
   LSM303_write(0x27, CTRL_REG1_A);  // 0x27 = normal power mode, all accel axes on
@@ -164,62 +178,78 @@ void initLSM303(int fs)
   LSM303_write(0x00, MR_REG_M);  // 0x00 = continouous conversion mode
 }
 
-void printValues(int * magArray, int * accelArray)
-{
-  /* print out mag and accel arrays all pretty-like */
-  Serial.print(accelArray[X], DEC);
-  Serial.print("\t");
-  Serial.print(accelArray[Y], DEC);
-  Serial.print("\t");
-  Serial.print(accelArray[Z], DEC);
-  Serial.print("\t\t");
-  
-  Serial.print(magArray[X], DEC);
-  Serial.print("\t");
-  Serial.print(magArray[Y], DEC);
-  Serial.print("\t");
-  Serial.print(magArray[Z], DEC);
-  Serial.println();
-}
+/*
+ * I don't use this function, but it's nice for looking at compass and magnet data.
+ */
+//void printValues(int * magArray, int * accelArray)
+//{
+//  /* print out mag and accel arrays all pretty-like */
+//  Serial.print(accelArray[X], DEC);
+//  Serial.print("\t");
+//  Serial.print(accelArray[Y], DEC);
+//  Serial.print("\t");
+//  Serial.print(accelArray[Z], DEC);
+//  Serial.print("\t\t");
+//  
+//  Serial.print(magArray[X], DEC);
+//  Serial.print("\t");
+//  Serial.print(magArray[Y], DEC);
+//  Serial.print("\t");
+//  Serial.print(magArray[Z], DEC);
+//  Serial.println();
+//}
 
-float getHeading(int * magValue)
-{
-  // see section 1.2 in app note AN3192
-  float heading = 180*atan2(magValue[Y], magValue[X])/PI;  // assume pitch, roll are 0
-  
-  if (heading <0)
-    heading += 360;
-  
-  return heading;
-}
+/*
+ * I don't use this either.
+ */
+//float getHeading(int * magValue)
+//{
+//  // see section 1.2 in app note AN3192
+//  float heading = 180*atan2(magValue[Y], magValue[X])/PI;  // assume pitch, roll are 0
+//  
+//  if (heading <0)
+//    heading += 360;
+//  
+//  return heading;
+//}
 
-float getTiltHeading(int * magValue, float * accelValue)
-{
-  // see appendix A in app note AN3192 
-  float pitch = asin(-accelValue[X]);
-  float roll = asin(accelValue[Y]/cos(pitch));
-  
-  float xh = magValue[X] * cos(pitch) + magValue[Z] * sin(pitch);
-  float yh = magValue[X] * sin(roll) * sin(pitch) + magValue[Y] * cos(roll) - magValue[Z] * sin(roll) * cos(pitch);
-  float zh = -magValue[X] * cos(roll) * sin(pitch) + magValue[Y] * sin(roll) + magValue[Z] * cos(roll) * cos(pitch);
+/*
+ * I don't use this either.
+ */
+//float getTiltHeading(int * magValue, float * accelValue)
+//{
+//  // see appendix A in app note AN3192 
+//  float pitch = asin(-accelValue[X]);
+//  float roll = asin(accelValue[Y]/cos(pitch));
+//  
+//  float xh = magValue[X] * cos(pitch) + magValue[Z] * sin(pitch);
+//  float yh = magValue[X] * sin(roll) * sin(pitch) + magValue[Y] * cos(roll) - magValue[Z] * sin(roll) * cos(pitch);
+//  float zh = -magValue[X] * cos(roll) * sin(pitch) + magValue[Y] * sin(roll) + magValue[Z] * cos(roll) * cos(pitch);
+//
+//  float heading = 180 * atan2(yh, xh)/PI;
+//  if (yh >= 0)
+//    return heading;
+//  else
+//    return (360 + heading);
+//}
 
-  float heading = 180 * atan2(yh, xh)/PI;
-  if (yh >= 0)
-    return heading;
-  else
-    return (360 + heading);
-}
+/*
+ * get raw magnetometer data. Returns an int array by reference.
+ * I don't use this in my program.
+ */
+//void getLSM303_mag(int * rawValues)
+//{
+//  Wire.beginTransmission(LSM303_MAG);
+//  Wire.write(OUT_X_H_M);
+//  Wire.endTransmission();
+//  Wire.requestFrom(LSM303_MAG, 6);
+//  for (int i=0; i<3; i++)
+//    rawValues[i] = (Wire.read() << 8) | Wire.read();
+//}
 
-void getLSM303_mag(int * rawValues)
-{
-  Wire.beginTransmission(LSM303_MAG);
-  Wire.write(OUT_X_H_M);
-  Wire.endTransmission();
-  Wire.requestFrom(LSM303_MAG, 6);
-  for (int i=0; i<3; i++)
-    rawValues[i] = (Wire.read() << 8) | Wire.read();
-}
-
+/*
+ * get raw accelerometer data. Returns an int array by reference.
+ */
 void getLSM303_accel(int * rawValues)
 {
   rawValues[Z] = ((int)LSM303_read(OUT_X_L_A) << 8) | (LSM303_read(OUT_X_H_A));
@@ -228,6 +258,10 @@ void getLSM303_accel(int * rawValues)
   // had to swap those to right the data with the proper axis
 }
 
+/*
+ * Read anything at all from the LSM303. Takes in the address of the register to read.
+ * Returns the contents in a byte.
+ */
 byte LSM303_read(byte address)
 {
   byte temp;
@@ -251,6 +285,9 @@ byte LSM303_read(byte address)
   return temp;
 }
 
+/*
+ * Writes some data to one of the LSM303's registers.
+ */
 void LSM303_write(byte data, byte address)
 {
   if (address >= 0x20)

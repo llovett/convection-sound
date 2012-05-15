@@ -49,6 +49,11 @@ public class Rainstick extends PApplet {
 	    roll = (int)map( (Integer)msg.arguments()[0], 0, 255, 0, WIDTH );
 	    pitch = (int)map( (Integer)msg.arguments()[1], 0, 255, 0, HEIGHT );
 	}
+
+	// Receive requests to clear --> delete all grains
+	if ( msg.checkAddrPattern("/clearall") ) {
+	    rain.clear();
+	}
     }
 
     /**

@@ -1,5 +1,12 @@
 package gfx;
 
+/**
+ * Rainstic.java
+ *
+ * This class does all the rendering for the Rainstick visualization.
+ * It also does all the OSC communication with Max.
+ * */
+
 import processing.core.*;
 import processing.opengl.*;
 import oscP5.*;
@@ -21,6 +28,12 @@ public class Rainstick extends PApplet {
     RainstickObject rain;
     int roll, pitch;	// these control the position of the Rainstick.
 
+    /**
+     * setup()
+     *
+     * Do some basic initialization, including setting up the Applet
+     * and constructing our OSC communication channel with Max.
+     * */
     public void setup() {
 	size( WIDTH, HEIGHT, OPENGL );
 
@@ -67,10 +80,16 @@ public class Rainstick extends PApplet {
 	OscMessage msg = new OscMessage( "/playgrain", new Object[]{ grainNo } );
 	osc.send( msg, new NetAddress(address, OSC_PORT_SEND) );
     }
-    
-    public void mouseClicked() {
-	rain.createGrain();
-    }
+
+    /**
+     * mouseClicked()
+     *
+     * Event handler for when the mouse is clicked. Currently,
+     * creates a grain, useful for debugging. 
+     * /
+    // public void mouseClicked() {
+    // 	rain.createGrain();
+    // }
 
     /**
      * draw()

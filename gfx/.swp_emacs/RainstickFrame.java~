@@ -1,6 +1,6 @@
-package display;
+package gfx;
 
-import display.*;
+import gfx.*;
 import java.awt.*;
 import java.awt.event.*;
 
@@ -26,14 +26,10 @@ public class RainstickFrame extends Frame {
 	rainstick.init();
 
 	setResizable(false);
-	setMinimumSize(new Dimension(rainstick.getWidth(),
-				     rainstick.getHeight()));
-	setPreferredSize(new Dimension(rainstick.getWidth(),
-				       rainstick.getHeight()));
+	setMinimumSize( new Dimension(Rainstick.WIDTH, Rainstick.HEIGHT) );
+	setPreferredSize( new Dimension(Rainstick.WIDTH, Rainstick.HEIGHT) );
 
 	add(rainstick, BorderLayout.CENTER);
-
-	rainstick.addMouseListener( this );
     }
 
     public static void main(String[] args) {

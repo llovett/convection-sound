@@ -143,6 +143,10 @@ void loop()
   Serial.flush();
 }
 
+/*
+ * This prints the roll and pitch information as numbers
+ * via serial to Max
+ */
 void print_roll_and_pitch( float * accelValue ) {
   // see appendix A in app note AN3192 
   float pitch = asin(-accelValue[X]);
@@ -157,6 +161,9 @@ void print_roll_and_pitch( float * accelValue ) {
   Serial.write( (int)roll );
 }
 
+/*
+ * This prints the value on the soft pot via serial to Max
+ */
 void print_softpot_val() {
   // We only want one-byte values (for ease of communication)
   int softpot_value = analogRead( SOFTPOT ) >> 2;

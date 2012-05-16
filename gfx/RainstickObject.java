@@ -1,5 +1,14 @@
 package gfx;
 
+/**
+ * RainstickObject.java
+ *
+ * This class is a model for the box with grains. It houses its
+ * own physics engine, which is resposible for calculating and updating
+ * motion. We also do edge detection here, which is sent over to
+ * Rainstick.java and transmitted to Max as a grain to play.
+ * */
+
 import processing.core.*;
 import traer.physics.*;
 import java.util.*;
